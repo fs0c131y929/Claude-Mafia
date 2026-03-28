@@ -1,0 +1,23 @@
+{
+  "devFiles": [],
+  "ampDevFiles": [],
+  "polyfillFiles": [],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [],
+  "pages": {
+    "/_app": [
+      "static/chunks/0icx_next_dist_compiled_0lpxzxy._.js",
+      "static/chunks/0icx_next_dist_shared_lib_025v8yl._.js",
+      "static/chunks/0icx_next_dist_client_12gj88-._.js",
+      "static/chunks/0icx_next_dist_0~aaqu0._.js",
+      "static/chunks/0icx_next_app_0e7kj_g.js",
+      "static/chunks/[next]_entry_page-loader_ts_0aps602._.js",
+      "static/chunks/0icx_react-dom_0nsj.n~._.js",
+      "static/chunks/0icx_0nzxlla._.js",
+      "static/chunks/[root-of-the-server]__0f9hffp._.js",
+      "static/chunks/Code_Hacklanta_meanbot_leetbot_pages__app_07xvfw~._.js",
+      "static/chunks/turbopack-Code_Hacklanta_meanbot_leetbot_pages__app_0sjvnw-._.js"
+    ]
+  },
+  "ampFirstPages": []
+}

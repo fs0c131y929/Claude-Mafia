@@ -1,0 +1,4 @@
+{"timestamp":"00:00:00.757","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:03:49.935","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir '/Users/youssefgaras/Desktop/Code/Hacklanta_meanbot/leetbot/src/app'"}
+{"timestamp":"00:03:49.937","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir '/Users/youssefgaras/Desktop/Code/Hacklanta_meanbot/leetbot/src/app'"}
+{"timestamp":"00:03:49.941","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir '/Users/youssefgaras/Desktop/Code/Hacklanta_meanbot/leetbot/src/app'"}
