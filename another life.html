@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registration Page</title>
+<style>
+  body {
+    font-family: Times New Roman, serif;
+    background: #ffffff;
+    color: #000000;
+    margin: 20px;
+  }
+  hr { margin: 10px 0; }
+  table { border-collapse: collapse; }
+  td { padding: 4px 8px; vertical-align: top; }
+  input, select { font-family: Times New Roman, serif; font-size: 14px; }
+  select { max-width: 400px; }
+  input[type="text"], input[type="password"] {
+    width: 300px;
+    padding: 2px 4px;
+  }
+  .criteria-table td { padding: 2px 6px; font-size: 14px; }
+  .met { color: green; font-weight: bold; }
+  .unmet { color: red; }
+  .pw-reveal {
+    display: inline-block;
+    background: #ffffcc;
+    border: 1px solid #999;
+    padding: 2px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .error-msg {
+    display: none;
+    color: red;
+    font-weight: bold;
+    font-size: 18px;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+  .cursor-counter {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    background: #ffffcc;
+    border: 1px solid #000;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    z-index: 100;
+  }
+ 
+  /* Giant visible cursor follower */
+  * { cursor: none !important; }
+  .cursor-follower {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 99999;
+    transition: width 0.1s, height 0.1s;
+  }
+  .visitor-counter {
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+    margin-top: 15px;
+  }
+ 
+  /* CAPTCHA grid */
+  .captcha-section {
+    border: 2px solid #4285f4;
+    border-radius: 3px;
+    width: 380px;
+    background: #f9f9f9;
+    overflow: hidden;
+  }
+  .captcha-header {
+    background: #4285f4;
+    color: #fff;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .captcha-header small {
+    display: block;
+    font-weight: normal;
+    font-size: 12px;
+    margin-top: 4px;
+    opacity: 0.9;
+  }
+  .captcha-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 10px;
+    background: #fff;
+  }
+  .captcha-cell {
+    aspect-ratio: 1;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    cursor: pointer;
+    background: #fff;
+    user-select: none;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+  }
+  .captcha-cell:hover {
+    background: #f0f0f0;
+  }
+  .captcha-cell.selected {
+    border-color: #4285f4;
+    background: #e8f0fe;
+  }
+  .captcha-cell.selected::after {
+    content: "✓";
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 14px;
+    color: #4285f4;
+    font-weight: bold;
+  }
+  .captcha-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    border-top: 1px solid #ddd;
+    background: #fafafa;
+  }
+  .captcha-footer button {
+    background: #4285f4;
+    color: #fff;
+    border: none;
+    padding: 6px 18px;
+    border-radius: 3px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: Times New Roman, serif;
+  }
+  .captcha-footer button:hover { background: #3367d6; }
+  .captcha-status {
+    font-size: 12px;
+    color: #666;
+  }
+  .captcha-passed {
+    color: green;
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .captcha-failed {
+    color: red;
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+ 
+  /* Login page styles */
+  .login-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    z-index: 9999;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .login-overlay.active { display: block; }
+ 
+  .char-feedback {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    min-width: 22px;
+    text-align: center;
+    padding: 2px 4px;
+    margin: 1px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    vertical-align: middle;
+  }
+  .char-correct {
+    color: green;
+    border-color: green;
+    background: #eeffee;
+  }
+  .char-wrong {
+    color: red;
+    border-color: red;
+    background: #ffeeee;
+    font-weight: bold;
+  }
+  .char-empty {
+    color: #ccc;
+    border-color: #ddd;
+    background: #fafafa;
+  }
+  .letter-insult {
+    color: red;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .all-correct {
+    color: green;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+ 
+<!-- ================= REGISTRATION PAGE ================= -->
+<div id="registrationPage">
+ 
+<marquee behavior="scroll" direction="left" scrollamount="4" style="background:#eeeeee;padding:4px;border:1px solid #ccc;font-size:13px;">
+  *** WELCOME TO THE REGISTRATION PAGE *** YOUR DATA IS SAFE* (*not really) *** WE DEFINITELY WON'T SELL YOUR INFO *** REGISTER NOW FOR FREE** (**terms apply) *** VOTED #1 MOST LEGITIMATE SITE BY OUR MOM ***
+</marquee>
+ 
+<center>
+  <h1>Registration Page</h1>
+  <font size="2" color="gray"><i>Please fill out the form below to create your account.</i></font>
+</center>
+ 
+<hr>
+ 
+<table>
+<tr>
+<td style="vertical-align:top;padding-right:40px;">
+ 
+  <font size="1" color="gray">This connection is secured with 256-bit military-grade encryption (trust us)</font>
+  <br><br>
+ 
+  <b>Select Your Username:</b><br>
+  <select id="usernameSelect"></select>
+  <br><br>
+ 
+  <b>Enter Password:</b><br>
+  <input type="password" id="passwordInput" placeholder="good luck lol">
+  <span class="pw-reveal">Your password: <b id="revealText">nothing yet</b></span>
+  <br><br>
+ 
+  <!-- CAPTCHA -->
+  <div class="captcha-section">
+    <div class="captcha-header">
+      🤖 PROVE YOU ARE A ROBOT
+      <small id="captchaPrompt">Select all squares with <b id="captchaTarget">loading...</b></small>
+    </div>
+    <div class="captcha-grid" id="captchaGrid"></div>
+    <div class="captcha-footer">
+      <span class="captcha-status" id="captchaStatus">Select images below</span>
+      <button onclick="verifyCaptcha()">Verify</button>
+    </div>
+  </div>
+  <div id="captchaResult"></div>
+ 
+  <br>
+  <input type="button" value="   Register   " onclick="attemptRegistration()" style="padding:6px 20px;font-size:15px;font-weight:bold;">
+ 
+  <div class="error-msg" id="errorMsg">WRONG PASSWORD IDIOT</div>
+ 
+</td>
+ 
+<td style="vertical-align:top;border-left:1px solid #ccc;padding-left:30px;">
+ 
+  <b><u>Password Requirements:</u></b>
+  <br><br>
+  <table class="criteria-table" border="1" cellpadding="3" cellspacing="0">
+    <tr id="crit-more-nine"><td class="check-cell">&#10007;</td><td>Must be more than 9 characters</td></tr>
+    <tr id="crit-number"><td class="check-cell">&#10007;</td><td>Must include a number</td></tr>
+    <tr id="crit-lower"><td class="check-cell">&#10007;</td><td>Must include a lowercase letter</td></tr>
+    <tr id="crit-kirk"><td class="check-cell">&#10007;</td><td>Must include the word "progsu" exactly once</td></tr>
+  </table>
+  <br>
+  <font size="1" color="gray">(Good luck. You'll need it.)</font>
+ 
+</td>
+</tr>
+</table>
+ 
+<hr>
+ 
+<div class="visitor-counter">
+  You are visitor #<script>document.write(Math.floor(Math.random()*900000)+100000)</script>
+  <br>
+  <font size="1">Best viewed in Netscape Navigator 4.0 at 800x600</font>
+</div>
+ 
+</div>
+ 
+<!-- ================= LOGIN PAGE ================= -->
+<div class="login-overlay" id="loginPage">
+ 
+<marquee behavior="scroll" direction="right" scrollamount="3" style="background:#eeeeee;padding:4px;border:1px solid #ccc;font-size:13px;">
+  *** YOU REGISTERED! NOW PROVE YOU REMEMBER YOUR PASSWORD *** WE'RE WATCHING *** NO PRESSURE ***
+</marquee>
+ 
+<center>
+  <h1>Login Page</h1>
+  <font size="2" color="gray"><i>Welcome back! (it's been 2 seconds)</i></font>
+</center>
+ 
+<hr>
+ 
+<table>
+<tr>
+<td>
+ 
+  <b>Your Username:</b><br>
+  <input type="text" id="loginUsername" readonly style="background:#eee;width:400px;">
+  <br><br>
+ 
+  <b>Enter Your Password:</b><br>
+  <input type="password" id="loginPasswordInput" placeholder="type it again, genius" style="width:300px;" oninput="checkLoginPassword()">
+  <br><br>
+ 
+  <b>Character-by-character check:</b><br>
+  <div id="charFeedback" style="margin-top:6px;min-height:30px;"></div>
+  <div id="letterInsult" class="letter-insult"></div>
+  <div id="allCorrectMsg" class="all-correct" style="display:none;"></div>
+ 
+  <br>
+  <input type="button" value="   Login   " onclick="attemptLogin()" style="padding:6px 20px;font-size:15px;font-weight:bold;">
+ 
+  <div class="error-msg" id="loginErrorMsg"></div>
+ 
+</td>
+</tr>
+</table>
+ 
+<hr>
+ 
+<div class="visitor-counter">
+  <font size="1">If you forgot your password, that's a YOU problem.</font>
+</div>
+ 
+</div>
+ 
+<!-- Cursor follower -->
+<svg class="cursor-follower" id="cursorFollower" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 4l8.5 22 3.5-8.5L24.5 14z" fill="#000000" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+ 
+<!-- Cursor counter -->
+<div class="cursor-counter" id="cursorCounter">Cursor: 32px</div>
+ 
+<script>
+// ============ STORED CREDENTIALS ============
+let storedUsername = '';
+let storedPassword = '';
+let captchaPassed = false;
+ 
+// ============ GENERATE GIBBERISH USERNAMES ============
+function generateGibberish(len) {
+  const chars = [];
+  for (let i = 0; i < len; i++) {
+    chars.push(String.fromCharCode(33 + Math.floor(Math.random() * 94)));
+  }
+  return chars.join('');
+}
+ 
+const usernameSelect = document.getElementById('usernameSelect');
+const defaultOpt = document.createElement('option');
+defaultOpt.textContent = '-- Choose a username --';
+defaultOpt.value = '';
+usernameSelect.appendChild(defaultOpt);
+ 
+for (let i = 0; i < 30; i++) {
+  const len = 8 + Math.floor(Math.random() * 57);
+  const opt = document.createElement('option');
+  const name = generateGibberish(len);
+  opt.value = name;
+  opt.textContent = name.length > 45 ? name.substring(0, 45) + '...' : name;
+  opt.title = name;
+  usernameSelect.appendChild(opt);
+}
+ 
+// ============ CAPTCHA — GOOGLE-STYLE IMAGE GRID ============
+// The trick: you MUST select the WRONG items to pass.
+// Selecting the correct matches = failure. Selecting incorrect ones = success.
+ 
+const captchaChallenges = [
+  {
+    target: 'cats',
+    items: [
+      { emoji: '🐱', isTarget: true },
+      { emoji: '🚗', isTarget: false },
+      { emoji: '🐈', isTarget: true },
+      { emoji: '🌮', isTarget: false },
+      { emoji: '🐱', isTarget: true },
+      { emoji: '🏠', isTarget: false },
+      { emoji: '🎸', isTarget: false },
+      { emoji: '🐈‍⬛', isTarget: true },
+      { emoji: '🍕', isTarget: false },
+    ]
+  },
+  {
+    target: 'traffic lights',
+    items: [
+      { emoji: '🚦', isTarget: true },
+      { emoji: '🌳', isTarget: false },
+      { emoji: '🚗', isTarget: false },
+      { emoji: '🚥', isTarget: true },
+      { emoji: '🏔️', isTarget: false },
+      { emoji: '🚦', isTarget: true },
+      { emoji: '🍩', isTarget: false },
+      { emoji: '🎈', isTarget: false },
+      { emoji: '🚥', isTarget: true },
+    ]
+  },
+  {
+    target: 'bicycles',
+    items: [
+      { emoji: '🚲', isTarget: true },
+      { emoji: '🚂', isTarget: false },
+      { emoji: '🎂', isTarget: false },
+      { emoji: '🚴', isTarget: true },
+      { emoji: '🦆', isTarget: false },
+      { emoji: '🚲', isTarget: true },
+      { emoji: '📱', isTarget: false },
+      { emoji: '🚴‍♀️', isTarget: true },
+      { emoji: '🧀', isTarget: false },
+    ]
+  },
+  {
+    target: 'fire hydrants',
+    items: [
+      { emoji: '🧯', isTarget: true },
+      { emoji: '🌺', isTarget: false },
+      { emoji: '🏀', isTarget: false },
+      { emoji: '🧯', isTarget: true },
+      { emoji: '🐶', isTarget: false },
+      { emoji: '🧲', isTarget: false },
+      { emoji: '🧯', isTarget: true },
+      { emoji: '🎪', isTarget: false },
+      { emoji: '🧃', isTarget: false },
+    ]
+  },
+  {
+    target: 'stars',
+    items: [
+      { emoji: '⭐', isTarget: true },
+      { emoji: '🔵', isTarget: false },
+      { emoji: '🌟', isTarget: true },
+      { emoji: '🟩', isTarget: false },
+      { emoji: '💫', isTarget: true },
+      { emoji: '🔶', isTarget: false },
+      { emoji: '🎵', isTarget: false },
+      { emoji: '✨', isTarget: true },
+      { emoji: '🧊', isTarget: false },
+    ]
+  },
+];
+ 
+let currentChallenge = null;
+let selectedCells = new Set();
+ 
+function loadCaptcha() {
+  captchaPassed = false;
+  selectedCells.clear();
+  currentChallenge = captchaChallenges[Math.floor(Math.random() * captchaChallenges.length)];
+ 
+  document.getElementById('captchaTarget').textContent = currentChallenge.target;
+  document.getElementById('captchaStatus').textContent = 'Select images below';
+  document.getElementById('captchaResult').innerHTML = '';
+ 
+  const grid = document.getElementById('captchaGrid');
+  grid.innerHTML = '';
+ 
+  // Shuffle items
+  const shuffled = [...currentChallenge.items].sort(() => Math.random() - 0.5);
+  currentChallenge.shuffled = shuffled;
+ 
+  shuffled.forEach((item, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'captcha-cell';
+    cell.textContent = item.emoji;
+    cell.dataset.index = idx;
+    cell.addEventListener('click', () => {
+      if (captchaPassed) return;
+      if (selectedCells.has(idx)) {
+        selectedCells.delete(idx);
+        cell.classList.remove('selected');
+      } else {
+        selectedCells.add(idx);
+        cell.classList.add('selected');
+      }
+      document.getElementById('captchaStatus').textContent = selectedCells.size + ' selected';
+    });
+    grid.appendChild(cell);
+  });
+}
+loadCaptcha();
+ 
+function verifyCaptcha() {
+  if (captchaPassed) return;
+ 
+  const shuffled = currentChallenge.shuffled;
+  const resultDiv = document.getElementById('captchaResult');
+ 
+  if (selectedCells.size === 0) {
+    resultDiv.innerHTML = '<div class="captcha-failed">You didn\'t select anything. Try harder.</div>';
+    return;
+  }
+ 
+  // Check: did the user select ANY correct (target) items?
+  let selectedAnyCorrect = false;
+  for (const idx of selectedCells) {
+    if (shuffled[idx].isTarget) {
+      selectedAnyCorrect = true;
+      break;
+    }
+  }
+ 
+  if (selectedAnyCorrect) {
+    // They matched correctly — that means they FAIL (they proved they're human, not a robot)
+    resultDiv.innerHTML = '<div class="captcha-failed">❌ You matched correctly! That means you\'re HUMAN. We need ROBOTS. Try again.</div>';
+    loadCaptcha();
+  } else {
+    // They selected only wrong items — they pass! (they're a "robot")
+    captchaPassed = true;
+    resultDiv.innerHTML = '<div class="captcha-passed">✅ VERIFIED: You are a robot. Welcome, fellow machine.</div>';
+    document.getElementById('captchaStatus').textContent = '✅ Passed';
+  }
+}
+ 
+// ============ PASSWORD REVEAL & CRITERIA ============
+const passwordInput = document.getElementById('passwordInput');
+const revealText = document.getElementById('revealText');
+ 
+passwordInput.addEventListener('input', () => {
+  const val = passwordInput.value;
+  revealText.textContent = val || 'nothing yet';
+  updateCriteria(val);
+});
+ 
+function updateCriteria(pw) {
+  const isMoreThanNine = pw.length > 9;
+  const hasNumber = /\d/.test(pw);
+  const hasLower = /[a-z]/.test(pw);
+  const kirkMatches = (pw.match(/progsu/g) || []).length;
+  const hasKirkOnce = kirkMatches === 1;
+ 
+  setCriteria('crit-more-nine', isMoreThanNine);
+  setCriteria('crit-number', hasNumber);
+  setCriteria('crit-lower', hasLower);
+  setCriteria('crit-kirk', hasKirkOnce);
+}
+ 
+function setCriteria(id, met) {
+  const row = document.getElementById(id);
+  const cell = row.querySelector('.check-cell');
+  if (met) {
+    cell.innerHTML = '&#10003;';
+    cell.className = 'check-cell met';
+    row.cells[1].className = 'met';
+  } else {
+    cell.innerHTML = '&#10007;';
+    cell.className = 'check-cell unmet';
+    row.cells[1].className = 'unmet';
+  }
+}
+['crit-more-nine','crit-number','crit-lower','crit-kirk'].forEach(id => setCriteria(id, false));
+ 
+// ============ CURSOR GROWS ON CLICK — FOREVER ============
+let cursorSize = 32;
+const cursorCounter = document.getElementById('cursorCounter');
+const cursorFollower = document.getElementById('cursorFollower');
+ 
+// Follow the mouse
+document.addEventListener('mousemove', (e) => {
+  cursorFollower.style.left = e.clientX + 'px';
+  cursorFollower.style.top = e.clientY + 'px';
+});
+ 
+// Grow 10% on every click
+document.addEventListener('click', (e) => {
+  cursorSize = Math.min(cursorSize * 1.1, 4096);
+  cursorFollower.style.width = cursorSize + 'px';
+  cursorFollower.style.height = cursorSize + 'px';
+  cursorCounter.textContent = 'Cursor: ' + Math.round(cursorSize) + 'px';
+  if (cursorSize >= 200) {
+    cursorCounter.textContent += ' (WHY)';
+  }
+  if (cursorSize >= 800) {
+    cursorCounter.textContent += ' !!!';
+  }
+});
+ 
+// ============ REGISTRATION LOGIC ============
+function attemptRegistration() {
+  const username = usernameSelect.value;
+  const password = passwordInput.value;
+  const errorMsg = document.getElementById('errorMsg');
+ 
+  if (!captchaPassed) {
+    errorMsg.textContent = 'COMPLETE THE CAPTCHA FIRST, ROBOT';
+    errorMsg.style.display = 'block';
+    return;
+  }
+ 
+  if (!username) {
+    errorMsg.textContent = 'PICK A USERNAME YOU COWARD';
+    errorMsg.style.display = 'block';
+    return;
+  }
+ 
+  const isMoreThanNine = password.length > 9;
+  const hasNumber = /\d/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const kirkMatches = (password.match(/progsu/g) || []).length;
+  const hasKirkOnce = kirkMatches === 1;
+  const allMet = isMoreThanNine && hasNumber && hasLower && hasKirkOnce;
+ 
+  if (!allMet) {
+    errorMsg.textContent = 'WRONG PASSWORD IDIOT';
+    errorMsg.style.display = 'block';
+    return;
+  }
+ 
+  // Store credentials and switch to login page
+  errorMsg.style.display = 'none';
+  storedUsername = username;
+  storedPassword = password;
+ 
+  document.getElementById('registrationPage').style.display = 'none';
+  document.getElementById('loginPage').classList.add('active');
+  document.getElementById('loginUsername').value = storedUsername;
+}
+ 
+// ============ LOGIN — CHARACTER-BY-CHARACTER CHECK ============
+const insults = [
+  "THAT'S THE WRONG LETTER/NUMBER YOU IDIOT!",
+  "WRONG PASSWORD!",
+  "EVEN MY GRANDMA REMEMBERS HERS",
+  "INCORRECT! DID YOU ALREADY FORGET?!",
+  "WRONG! IT'S BEEN 5 SECONDS AND YOU FORGOT?!",
+  "ITS HOPELESS",
+  "NOPE! WRONG! TRY AGAIN, GENIUS!",
+  "THAT'S NOT IT! DO YOU EVEN HAVE A BRAIN?!",
+];
+ 
+function checkLoginPassword() {
+  const typed = document.getElementById('loginPasswordInput').value;
+  const feedbackDiv = document.getElementById('charFeedback');
+  const insultDiv = document.getElementById('letterInsult');
+  const correctMsg = document.getElementById('allCorrectMsg');
+ 
+  let html = '';
+  let hasWrong = false;
+  const maxLen = Math.max(typed.length, storedPassword.length);
+ 
+  for (let i = 0; i < maxLen; i++) {
+    const typedChar = typed[i];
+    const expectedChar = storedPassword[i];
+ 
+    if (i >= typed.length) {
+      html += '<span class="char-feedback char-empty">_</span>';
+    } else if (typedChar === expectedChar) {
+      html += '<span class="char-feedback char-correct">&#10003;</span>';
+    } else {
+      hasWrong = true;
+      html += '<span class="char-feedback char-wrong">&#10007;</span>';
+    }
+  }
+ 
+  feedbackDiv.innerHTML = html;
+ 
+  if (typed.length === 0) {
+    insultDiv.textContent = '';
+    correctMsg.style.display = 'none';
+  } else if (hasWrong) {
+    insultDiv.textContent = insults[Math.floor(Math.random() * insults.length)];
+    correctMsg.style.display = 'none';
+  } else if (typed.length < storedPassword.length) {
+    insultDiv.textContent = '';
+    correctMsg.style.display = 'none';
+  } else if (typed === storedPassword) {
+    insultDiv.textContent = '';
+    correctMsg.style.display = 'block';
+    correctMsg.textContent = '\u2713 ALL CORRECT! You may now click Login.';
+  } else {
+    insultDiv.textContent = "TOO MANY CHARACTERS YOU OVERACHIEVER!";
+    correctMsg.style.display = 'none';
+  }
+}
+ 
+function attemptLogin() {
+  const typed = document.getElementById('loginPasswordInput').value;
+  const errorMsg = document.getElementById('loginErrorMsg');
+ 
+  if (typed === storedPassword) {
+    // Rickroll
+    window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+    errorMsg.style.display = 'block';
+    errorMsg.style.color = 'green';
+    errorMsg.textContent = 'LOGIN SUCCESSFUL! REDIRECTING... (check your new tab)';
+  } else {
+    errorMsg.style.display = 'block';
+    errorMsg.style.color = 'red';
+    errorMsg.textContent = 'WRONG PASSWORD IDIOT! LOOK AT THE CHARACTERS ABOVE!';
+  }
+}
+</script>
+</body>
+</html>
